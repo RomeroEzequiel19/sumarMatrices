@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calcular Suma de Matrices</title>
+    <style>
+      table {
+        background-color: rgb(150, 150, 206);
+        padding: 1px;
+        margin: 15px;
+        border-radius: 10px;
+      }
+      #matrizDiv {
+        display: flex;
+        justify-content: center;
+      }
+      td > input {
+        margin: 5px;
+        width: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CALCULADORA DE MATRICES</h1>
+    <br />
+    <label for="fila">Ingrese la cantidad de filas</label>
+    <input type="number" name="fila" id="fila" />
+    <label for="columna">Ingrese la cantidad de columnas</label>
+    <input type="number" name="columna" id="columna" />
+    <button onclick="crearMatrices()">Crear Matriz</button>
+    <br />
+    <div id="matrizDiv"></div>
+    <button style="display: none" id="boton" onclick="calcularSuma()">
+      Calcular
+    </button>
+
+    <script>
+      function crearMatrices() {
+        crearMatriz();
+        crearMatriz();
+      }
+
+      function crearMatriz() {
+        let cantFilas = parseInt(document.getElementById("fila").value);
+        let cantColumnas = parseInt(document.getElementById("columna").value);
+        let matrizDiv = document.getElementById("matrizDiv");
+        let boton = document.getElementById("boton");
+
+        boton.style.display = "block";
+
+        let table = document.createElement("table");
+
+        for (let i = 0; i < cantFilas; i++) {
+          let tr = document.createElement("tr");
+          for (j = 0; j < cantColumnas; j++) {
+            let td = document.createElement("td");
+            let input = document.createElement("input");
+            input.type = "number";
+
+            td.appendChild(input);
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+        }
+        matrizDiv.appendChild(table);
+      }
+
+      function calcularSuma() {
+        let matrices = document.querySelectorAll("#matrizDiv table");
+        let data = [];
+        matrices.forEach((matrix) => {
+          let rows = [];
+          Array.from(matrix.rows).forEach((row) => {
+            let cells = [];
+            Array.from(row.cells).forEach((cell) => {
+              cells.push(parseInt(cell.querySelector("input").value));
+            });
+            rows.push(cells);
+          });
+          data.push(rows);
+        });
+
+        // Enviar las matrices al servidor para calcular la suma
+        fetch("/calcular", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => response.json())
+          .then((resultado) => mostrarResultado(resultado))
+          .catch((error) => console.error("Error:", error));
+      }
+
+      function mostrarResultado(resultado) {
+        // Crear tabla para mostrar resultado
+        let tablaResultado = document.createElement("table");
+
+        for (let i = 0; i < resultado.length; i++) {
+          let tr = document.createElement("tr");
+          for (let j = 0; j < resultado[0].length; j++) {
+            let td = document.createElement("td");
+            let input = document.createElement("input");
+            input.type = "number";
+            input.value = resultado[i][j]; // Mostrar el valor calculado
+            input.disabled = true; // Deshabilitar la edición del input
+
+            td.appendChild(input);
+            tr.appendChild(td);
+          }
+          tablaResultado.appendChild(tr);
+        }
+
+        // Limpiar el div y mostrar la tabla de resultado
+        let matrizDiv = document.getElementById("matrizDiv");
+        matrizDiv.innerHTML = "";
+        matrizDiv.appendChild(tablaResultado);
+      }
+    </script>
+  </body>
+</html>
